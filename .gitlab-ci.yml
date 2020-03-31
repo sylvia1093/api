@@ -1,0 +1,33 @@
+cache:
+  paths:
+    - node_modules/
+
+stages:
+  - deploy
+
+deploy_dev:
+  stage: deploy
+  when: manual
+  only:
+    - develop
+  script:
+      - DEV_HOME="/var/www/dev_pagex_api/";
+      - PATH=${PATH}:/usr/local/bin
+      - if [ ! -d $DEV_HOME ]; then exit 1; fi
+      - npm install
+      - rsync -arp  --exclude-from='.rsync_excludes' --delete-delay . ${DEV_HOME}
+      - pm2 reload server
+
+deploy_prod:
+  stage: deploy
+  only:
+    - master
+  script:
+    - DEV_HOME="/var/www/pagex_api/";
+    - PATH=${PATH}:/usr/local/bin
+    - if [ ! -d $DEV_HOME ]; then exit 1; fi
+    - npm install
+    - rsync -arp  --exclude-from='.rsync_excludes' --delete-delay . ${DEV_HOME}
+    - sh /var/www/rsync/api.sh
+    # - pm2 restart socket
+    # - pm2 reload server
